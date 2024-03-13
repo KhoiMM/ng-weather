@@ -16,5 +16,5 @@ const appRoutes: Routes = [
 
 export const routing: ModuleWithProviders<any> = RouterModule.forRoot(
   appRoutes,
-  {}
+  { useHash: true }
 );
