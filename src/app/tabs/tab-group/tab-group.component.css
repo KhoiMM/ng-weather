@@ -1,0 +1,41 @@
+:host {
+  .tab-group-header {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+  }
+
+  .tab-header-container {
+    background-color: #607AA0;
+    color: #FFF;
+    padding: 4px 12px;
+    border: 1px solid #000;
+    border-bottom-width: 0;
+  }
+
+  .tab-header-label {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .button-remove-tab {
+    width: 20px;
+    text-align: center;
+  }
+
+  .button-remove-tab:hover {
+    background-color: #506080;
+    cursor: pointer;
+  }
+
+  .container-content {
+    border: 1px solid #000;
+  }
+
+  .active {
+    background-color: #405D80;
+    color: #CCC;
+  }
+}

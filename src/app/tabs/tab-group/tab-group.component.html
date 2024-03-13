@@ -1,0 +1,19 @@
+<div>
+  <div class="tab-group-header">
+    <div
+      class="tab-header-container"
+      *ngFor="let tab of tabs; let i = index"
+      [ngClass]="{ active: tab.active === true }"
+      (click)="selectTab(tab)"
+    >
+      <div class="tab-header-label">
+        <span>{{ tab.label }}</span>
+        <div class="button-remove-tab" (click)="removeTab(i)">X</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-content">
+    <ng-content></ng-content>
+  </div>
+</div>

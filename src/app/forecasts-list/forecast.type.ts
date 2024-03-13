@@ -1,9 +1,11 @@
 export interface Forecast {
+    zipcode: string;
     city:    City;
     cod:     string;
     message: number;
     cnt:     number;
     list:    List[];
+    calledTime: number;
 }
 
 export interface City {

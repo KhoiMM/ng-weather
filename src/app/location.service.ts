@@ -1,32 +1,56 @@
-import { Injectable } from "@angular/core";
-import { WeatherService } from "./weather.service";
+import { Injectable } from '@angular/core';
+import { WeatherService } from './weather.service';
+import { BehaviorSubject } from 'rxjs';
 
-export const LOCATIONS: string = "locations";
+export const LOCATIONS: string = 'locations';
+export interface LocationMode {
+  mode: 'get' | 'create' | 'remove';
+  currentZip?: string;
+  locations: string[];
+  selectedIndex?: number;
+
+}
 
 @Injectable()
 export class LocationService {
   locations: string[] = [];
+  public locationsSubject = new BehaviorSubject<LocationMode>({
+    mode: 'get',
+    currentZip: '',
+    locations: this.locations
+  });
 
-  constructor(private weatherService: WeatherService) {
-    console.log(11111);
+  initLocations() {
     let locString = localStorage.getItem(LOCATIONS);
-    if (locString) this.locations = JSON.parse(locString);
-    for (let loc of this.locations)
-      this.weatherService.addCurrentConditions(loc);
+    if (locString) {
+      this.locations = JSON.parse(locString);
+      this.locationsSubject.next({
+        mode: 'get',
+        currentZip: '',
+        locations: []
+      });
+    }
   }
 
   addLocation(zipcode: string) {
     this.locations.push(zipcode);
     localStorage.setItem(LOCATIONS, JSON.stringify(this.locations));
-    this.weatherService.addCurrentConditions(zipcode);
+    this.locationsSubject.next({
+      mode: 'create',
+      currentZip: zipcode,
+      locations: this.locations
+    });
   }
 
-  removeLocation(zipcode: string) {
-    let index = this.locations.indexOf(zipcode);
+  removeLocation(index: number) {
     if (index !== -1) {
       this.locations.splice(index, 1);
       localStorage.setItem(LOCATIONS, JSON.stringify(this.locations));
-      this.weatherService.removeCurrentConditions(zipcode);
+      this.locationsSubject.next({
+        mode: 'remove',
+        locations: this.locations,
+        selectedIndex: index
+      });
     }
-  }
+  } 
 }

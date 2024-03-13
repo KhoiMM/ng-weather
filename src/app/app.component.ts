@@ -9,5 +9,17 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  constructor() {}
+  constructor() {
+    if (!localStorage.getItem('locations')) {
+      localStorage.setItem('locations', JSON.stringify([]));
+    }
+
+    if (!localStorage.getItem('conditionsByZip')) {
+      localStorage.setItem('conditionsByZip', JSON.stringify([]));
+    }
+
+    if (!localStorage.getItem('forecasts')) {
+      localStorage.setItem('forecasts', JSON.stringify([]));
+    }
+  }
 }
