@@ -1,12 +1,12 @@
-import { Injectable, Signal, signal } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 
 import { HttpClient } from '@angular/common/http';
-import { CurrentConditions } from './current-conditions/current-conditions.type';
-import { ConditionsAndZip } from './conditions-and-zip.type';
-import { Forecast } from './forecasts-list/forecast.type';
 import { take } from 'rxjs/operators';
 import { CACHED_TIME } from './cached-time';
+import { ConditionsAndZip } from './conditions-and-zip.type';
+import { CurrentConditions } from './current-conditions/current-conditions.type';
+import { Forecast } from './forecasts-list/forecast.type';
 
 @Injectable()
 export class WeatherService {
@@ -15,6 +15,7 @@ export class WeatherService {
   static ICON_URL =
     'https://raw.githubusercontent.com/udacity/Sunshine-Version-2/sunshine_master/app/src/main/res/drawable-hdpi/';
   currentConditions: ConditionsAndZip[] = [];
+  public addErrorSubject = new Subject();
 
   constructor(private http: HttpClient) {}
 
@@ -63,11 +64,10 @@ export class WeatherService {
             'conditionsByZip',
             JSON.stringify(this.currentConditions)
           );
-        },
+        }
+        ,
         () => {
-          const cachedLocations = JSON.parse(localStorage.getItem('locations')) as string[];
-          cachedLocations.pop();
-          localStorage.setItem('locations', JSON.stringify(cachedLocations));
+          this.addErrorSubject.next();
         }
       );
   }
@@ -82,10 +82,6 @@ export class WeatherService {
       localStorage.setItem('conditionsByZip', JSON.stringify(cachedConditions));
     }
   }
-
-  // getCurrentConditions(): Signal<ConditionsAndZip[]> {
-  //   return this.currentConditions.asReadonly();
-  // }
 
   getForecast(zipcode: string): Observable<Forecast> {
     // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode

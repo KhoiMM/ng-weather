@@ -215,9 +215,14 @@ let CurrentConditionsComponent = class CurrentConditionsComponent {
         this.weatherService.removeCurrentConditions(value.selectedIndex);
       }
     });
+    this.addErrorSubscription$ = this.weatherService.addErrorSubject.subscribe(() => {
+      this.locationService.locations.pop();
+      localStorage.setItem('locations', JSON.stringify(this.locationService.locations));
+    });
   }
   showForecast(zipcode) {
     this.weatherService.currentConditions = [];
+    this.locationService.locations = [];
     this.router.navigate(['/forecast', zipcode]);
   }
   removeTab($event) {
@@ -225,6 +230,7 @@ let CurrentConditionsComponent = class CurrentConditionsComponent {
   }
   ngOnDestroy() {
     this.locationsSubscription$.unsubscribe();
+    this.addErrorSubscription$.unsubscribe();
   }
   static #_ = this.ctorParameters = () => [{
     type: _angular_router__WEBPACK_IMPORTED_MODULE_5__.Router
@@ -551,9 +557,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   WeatherService: () => (/* binding */ WeatherService)
 /* harmony export */ });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/core */ 4280);
-/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common/http */ 3712);
-/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs/operators */ 5944);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/core */ 4280);
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs */ 4640);
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/common/http */ 3712);
+/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ 5944);
 /* harmony import */ var _cached_time__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./cached-time */ 5636);
 var __decorate = undefined && undefined.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
@@ -567,6 +574,7 @@ var WeatherService_1;
 
 
 
+
 let WeatherService = class WeatherService {
   static #_ = WeatherService_1 = this;
   static #_2 = this.URL = 'http://api.openweathermap.org/data/2.5';
@@ -575,13 +583,14 @@ let WeatherService = class WeatherService {
   constructor(http) {
     this.http = http;
     this.currentConditions = [];
+    this.addErrorSubject = new rxjs__WEBPACK_IMPORTED_MODULE_1__.Subject();
   }
   initCurrentConditions(zipcode, cachedConditions) {
     const condition = cachedConditions.find(c => c.zip === zipcode);
     if (condition && condition.calledTime + _cached_time__WEBPACK_IMPORTED_MODULE_0__.CACHED_TIME >= new Date().getTime()) {
       this.currentConditions.push(condition);
     } else {
-      this.http.get(`${WeatherService_1.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService_1.APPID}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_1__.take)(1)).subscribe(res => {
+      this.http.get(`${WeatherService_1.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService_1.APPID}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_2__.take)(1)).subscribe(res => {
         this.currentConditions.push({
           zip: zipcode,
           data: res,
@@ -593,7 +602,7 @@ let WeatherService = class WeatherService {
   }
   addCurrentConditions(zipcode) {
     // Here we make a request to get the current conditions data from the API. Note the use of backticks and an expression to insert the zipcode
-    this.http.get(`${WeatherService_1.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService_1.APPID}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_1__.take)(1)).subscribe(condition => {
+    this.http.get(`${WeatherService_1.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService_1.APPID}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_2__.take)(1)).subscribe(condition => {
       this.currentConditions.push({
         zip: zipcode,
         data: condition,
@@ -601,9 +610,7 @@ let WeatherService = class WeatherService {
       });
       localStorage.setItem('conditionsByZip', JSON.stringify(this.currentConditions));
     }, () => {
-      const cachedLocations = JSON.parse(localStorage.getItem('locations'));
-      cachedLocations.pop();
-      localStorage.setItem('locations', JSON.stringify(cachedLocations));
+      this.addErrorSubject.next();
     });
   }
   removeCurrentConditions(index) {
@@ -614,9 +621,6 @@ let WeatherService = class WeatherService {
       localStorage.setItem('conditionsByZip', JSON.stringify(cachedConditions));
     }
   }
-  // getCurrentConditions(): Signal<ConditionsAndZip[]> {
-  //   return this.currentConditions.asReadonly();
-  // }
   getForecast(zipcode) {
     // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode
     return this.http.get(`${WeatherService_1.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService_1.APPID}`);
@@ -625,10 +629,10 @@ let WeatherService = class WeatherService {
     if (id >= 200 && id <= 232) return WeatherService_1.ICON_URL + 'art_storm.png';else if (id >= 501 && id <= 511) return WeatherService_1.ICON_URL + 'art_rain.png';else if (id === 500 || id >= 520 && id <= 531) return WeatherService_1.ICON_URL + 'art_light_rain.png';else if (id >= 600 && id <= 622) return WeatherService_1.ICON_URL + 'art_snow.png';else if (id >= 801 && id <= 804) return WeatherService_1.ICON_URL + 'art_clouds.png';else if (id === 741 || id === 761) return WeatherService_1.ICON_URL + 'art_fog.png';else return WeatherService_1.ICON_URL + 'art_clear.png';
   }
   static #_5 = this.ctorParameters = () => [{
-    type: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__.HttpClient
+    type: _angular_common_http__WEBPACK_IMPORTED_MODULE_3__.HttpClient
   }];
 };
-WeatherService = WeatherService_1 = __decorate([(0,_angular_core__WEBPACK_IMPORTED_MODULE_3__.Injectable)()], WeatherService);
+WeatherService = WeatherService_1 = __decorate([(0,_angular_core__WEBPACK_IMPORTED_MODULE_4__.Injectable)()], WeatherService);
 
 
 /***/ }),
@@ -765,7 +769,10 @@ ___CSS_LOADER_EXPORT___.push([module.id, `.close {
   margin: 24px 60px 24px 24px;
   padding: 0 12px;
 }
-`, "",{"version":3,"sources":["webpack://./src/app/current-conditions/current-conditions.component.css"],"names":[],"mappings":"AAAA;EACE,eAAe;AACjB;AACA;EACE,aAAa;EACb,8BAA8B;AAChC;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,SAAS;EACT,yBAAyB;EACzB,2BAA2B;EAC3B,eAAe;AACjB","sourcesContent":[".close {\n  cursor: pointer;\n}\n.flex {\n  display: flex;\n  justify-content: space-between;\n}\n\n.card-weather {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  background-color: #f5f5f5;\n  margin: 24px 60px 24px 24px;\n  padding: 0 12px;\n}\n"],"sourceRoot":""}]);
+a {
+  cursor: pointer;
+}
+`, "",{"version":3,"sources":["webpack://./src/app/current-conditions/current-conditions.component.css"],"names":[],"mappings":"AAAA;EACE,eAAe;AACjB;AACA;EACE,aAAa;EACb,8BAA8B;AAChC;;AAEA;EACE,aAAa;EACb,mBAAmB;EACnB,SAAS;EACT,yBAAyB;EACzB,2BAA2B;EAC3B,eAAe;AACjB;AACA;EACE,eAAe;AACjB","sourcesContent":[".close {\n  cursor: pointer;\n}\n.flex {\n  display: flex;\n  justify-content: space-between;\n}\n\n.card-weather {\n  display: flex;\n  align-items: center;\n  gap: 32px;\n  background-color: #f5f5f5;\n  margin: 24px 60px 24px 24px;\n  padding: 0 12px;\n}\na {\n  cursor: pointer;\n}\n"],"sourceRoot":""}]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___.toString();
 
@@ -813,6 +820,8 @@ ___CSS_LOADER_EXPORT___.push([module.id, `:host {
     display: flex;
     flex-direction: row;
     gap: 2px;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 
   .tab-header-container {
@@ -848,7 +857,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `:host {
     background-color: #405D80;
     color: #CCC;
   }
-}`, "",{"version":3,"sources":["webpack://./src/app/tabs/tab-group/tab-group.component.css"],"names":[],"mappings":"AAAA;EACE;IACE,aAAa;IACb,mBAAmB;IACnB,QAAQ;EACV;;EAEA;IACE,yBAAyB;IACzB,WAAW;IACX,iBAAiB;IACjB,sBAAsB;IACtB,sBAAsB;EACxB;;EAEA;IACE,aAAa;IACb,mBAAmB;IACnB,SAAS;IACT,eAAe;EACjB;;EAEA;IACE,WAAW;IACX,kBAAkB;EACpB;;EAEA;IACE,yBAAyB;IACzB,eAAe;EACjB;;EAEA;IACE,sBAAsB;EACxB;;EAEA;IACE,yBAAyB;IACzB,WAAW;EACb;AACF","sourcesContent":[":host {\r\n  .tab-group-header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    gap: 2px;\r\n  }\r\n\r\n  .tab-header-container {\r\n    background-color: #607AA0;\r\n    color: #FFF;\r\n    padding: 4px 12px;\r\n    border: 1px solid #000;\r\n    border-bottom-width: 0;\r\n  }\r\n\r\n  .tab-header-label {\r\n    display: flex;\r\n    flex-direction: row;\r\n    gap: 12px;\r\n    cursor: pointer;\r\n  }\r\n\r\n  .button-remove-tab {\r\n    width: 20px;\r\n    text-align: center;\r\n  }\r\n\r\n  .button-remove-tab:hover {\r\n    background-color: #506080;\r\n    cursor: pointer;\r\n  }\r\n\r\n  .container-content {\r\n    border: 1px solid #000;\r\n  }\r\n\r\n  .active {\r\n    background-color: #405D80;\r\n    color: #CCC;\r\n  }\r\n}"],"sourceRoot":""}]);
+}`, "",{"version":3,"sources":["webpack://./src/app/tabs/tab-group/tab-group.component.css"],"names":[],"mappings":"AAAA;EACE;IACE,aAAa;IACb,mBAAmB;IACnB,QAAQ;IACR,gBAAgB;IAChB,mBAAmB;EACrB;;EAEA;IACE,yBAAyB;IACzB,WAAW;IACX,iBAAiB;IACjB,sBAAsB;IACtB,sBAAsB;EACxB;;EAEA;IACE,aAAa;IACb,mBAAmB;IACnB,SAAS;IACT,eAAe;EACjB;;EAEA;IACE,WAAW;IACX,kBAAkB;EACpB;;EAEA;IACE,yBAAyB;IACzB,eAAe;EACjB;;EAEA;IACE,sBAAsB;EACxB;;EAEA;IACE,yBAAyB;IACzB,WAAW;EACb;AACF","sourcesContent":[":host {\r\n  .tab-group-header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    gap: 2px;\r\n    overflow-x: auto;\r\n    white-space: nowrap;\r\n  }\r\n\r\n  .tab-header-container {\r\n    background-color: #607AA0;\r\n    color: #FFF;\r\n    padding: 4px 12px;\r\n    border: 1px solid #000;\r\n    border-bottom-width: 0;\r\n  }\r\n\r\n  .tab-header-label {\r\n    display: flex;\r\n    flex-direction: row;\r\n    gap: 12px;\r\n    cursor: pointer;\r\n  }\r\n\r\n  .button-remove-tab {\r\n    width: 20px;\r\n    text-align: center;\r\n  }\r\n\r\n  .button-remove-tab:hover {\r\n    background-color: #506080;\r\n    cursor: pointer;\r\n  }\r\n\r\n  .container-content {\r\n    border: 1px solid #000;\r\n  }\r\n\r\n  .active {\r\n    background-color: #405D80;\r\n    color: #CCC;\r\n  }\r\n}"],"sourceRoot":""}]);
 // Exports
 module.exports = ___CSS_LOADER_EXPORT___.toString();
 
@@ -891,7 +900,7 @@ module.exports = "<router-outlet></router-outlet>\n";
 /***/ ((module) => {
 
 "use strict";
-module.exports = "<div>\n  <ng-container *ngIf=\"currentConditionsByZip.length\">\n    <app-tab-group (removeTabEvent)=\"removeTab($event)\">\n      <ng-container\n        *ngFor=\"let location of currentConditionsByZip\"\n        class=\"well flex\"\n      >\n        <app-tab label=\"{{ location.data.name }} ({{ location.zip }})\">\n          <div class=\"card-weather\" (click)=\"showForecast(location.zip)\">\n            <div>\n              <h4>Current conditions: {{ location.data.weather[0].main }}</h4>\n              <h4>Temperatures today:</h4>\n              <p>\n                Current {{ location.data.main.temp | number : '.0-0' }} - Max\n                {{ location.data.main.temp_max | number : '.0-0' }} - Min\n                {{ location.data.main.temp_min | number : '.0-0' }}\n              </p>\n              <p>\n                <a [routerLink]=\"['/forecast', location.zip]\"\n                  >Show 5-day forecast for {{ location.data.name }}</a\n                >\n              </p>\n            </div>\n            <img\n              [src]=\"weatherService.getWeatherIcon(location.data.weather[0].id)\"\n            />\n          </div>\n        </app-tab>\n      </ng-container>\n    </app-tab-group>\n  </ng-container>\n</div>\n";
+module.exports = "<div>\n  <ng-container *ngIf=\"currentConditionsByZip.length\">\n    <app-tab-group (removeTabEvent)=\"removeTab($event)\">\n      <ng-container\n        *ngFor=\"let location of currentConditionsByZip\"\n        class=\"well flex\"\n      >\n        <app-tab label=\"{{ location.data.name }} ({{ location.zip }})\">\n          <div class=\"card-weather\" (click)=\"showForecast(location.zip)\">\n            <div>\n              <h4>Current conditions: {{ location.data.weather[0].main }}</h4>\n              <h4>Temperatures today:</h4>\n              <p>\n                Current {{ location.data.main.temp | number : '.0-0' }} - Max\n                {{ location.data.main.temp_max | number : '.0-0' }} - Min\n                {{ location.data.main.temp_min | number : '.0-0' }}\n              </p>\n              <p>\n                <a (click)=\"showForecast(location.zip)\"\n                  >Show 5-day forecast for {{ location.data.name }}</a\n                >\n              </p>\n            </div>\n            <img\n              [src]=\"weatherService.getWeatherIcon(location.data.weather[0].id)\"\n            />\n          </div>\n        </app-tab>\n      </ng-container>\n    </app-tab-group>\n  </ng-container>\n</div>\n";
 
 /***/ }),
 

@@ -15,6 +15,7 @@ export class CurrentConditionsComponent {
   private weatherService = inject(WeatherService);
   protected locationService = inject(LocationService);
   locationsSubscription$: Subscription;
+  addErrorSubscription$: Subscription;
   currentConditionsByZip: ConditionsAndZip[] = [];
 
   constructor(private router: Router) {
@@ -45,10 +46,18 @@ export class CurrentConditionsComponent {
           this.weatherService.removeCurrentConditions(value.selectedIndex);
         }
       });
+
+    this.addErrorSubscription$ = this.weatherService.addErrorSubject.subscribe(
+      () => {
+        this.locationService.locations.pop();
+        localStorage.setItem('locations', JSON.stringify(this.locationService.locations));
+      }
+    );
   }
 
   showForecast(zipcode: string) {
     this.weatherService.currentConditions = [];
+    this.locationService.locations = [];
     this.router.navigate(['/forecast', zipcode]);
   }
 
@@ -58,5 +67,6 @@ export class CurrentConditionsComponent {
 
   ngOnDestroy() {
     this.locationsSubscription$.unsubscribe();
+    this.addErrorSubscription$.unsubscribe();
   }
 }
