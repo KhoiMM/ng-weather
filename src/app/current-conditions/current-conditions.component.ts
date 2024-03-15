@@ -36,8 +36,6 @@ export class CurrentConditionsComponent {
           });
         } else if (value.mode === 'create') {
           this.weatherService.addCurrentConditions(value.currentZip);
-        } else if (value.mode === 'remove') {
-          this.weatherService.removeCurrentConditions(value.selectedIndex);
         }
       });
 

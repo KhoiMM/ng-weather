@@ -4,6 +4,7 @@ import {
   Component,
   ContentChildren,
   EventEmitter,
+  Input,
   OnInit,
   Output,
   QueryList,
@@ -18,6 +19,7 @@ import { TabComponent } from '../tab/tab.component';
 export class TabGroupComponent {
   @ContentChildren(TabComponent) tabs: QueryList<TabComponent>;
   @Output() removeTabEvent = new EventEmitter<number>();
+  @Input() data: unknown[];
 
   ngOnInit(): void {
     setTimeout(() => {
@@ -38,6 +40,7 @@ export class TabGroupComponent {
 
   removeTab(index: number) {
     this.tabs[index] = false;
+    this.data.splice(index, 1);
     this.removeTabEvent.emit(index);
     setTimeout(() => {
       if (this.tabs.length) {

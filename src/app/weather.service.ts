@@ -63,12 +63,6 @@ export class WeatherService {
     }
   }
 
-  removeCurrentConditions(index: number) {
-    if (index !== -1) {
-      this.currentConditions.splice(index, 1);
-    }
-  }
-
   getForecast(zipcode: string): Observable<Forecast> {
     this.checkExpTime();
     // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode

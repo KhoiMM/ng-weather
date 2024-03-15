@@ -1,5 +1,5 @@
 <div class="container-tab-weather" *ngIf="currentConditionsByZip.length">
-  <app-tab-group (removeTabEvent)="removeTab($event)">
+  <app-tab-group [data]="currentConditionsByZip" (removeTabEvent)="removeTab($event)">
     <ng-container
       *ngFor="let location of currentConditionsByZip"
       class="well flex"
