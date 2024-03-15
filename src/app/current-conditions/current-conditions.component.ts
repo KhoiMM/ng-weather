@@ -1,10 +1,9 @@
-import { Component, inject, OnInit, Signal } from '@angular/core';
-import { WeatherService } from '../weather.service';
-import { LocationService } from '../location.service';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ConditionsAndZip } from '../conditions-and-zip.type';
-import { take } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { ConditionsAndZip } from '../conditions-and-zip.type';
+import { LocationService } from '../location.service';
+import { WeatherService } from '../weather.service';
 
 @Component({
   selector: 'app-current-conditions',
@@ -20,6 +19,7 @@ export class CurrentConditionsComponent {
 
   constructor(private router: Router) {
     this.currentConditionsByZip = this.weatherService.currentConditions;
+    
   }
 
   ngOnInit() {
@@ -31,14 +31,8 @@ export class CurrentConditionsComponent {
     this.locationsSubscription$ =
       this.locationService.locationsSubject.subscribe((value) => {
         if (value.mode === 'get') {
-          const cachedConditions = JSON.parse(
-            localStorage.getItem('conditionsByZip')
-          ) as ConditionsAndZip[];
           this.locationService.locations.forEach((location) => {
-            this.weatherService.initCurrentConditions(
-              location,
-              cachedConditions
-            );
+            this.weatherService.addCurrentConditions(location);
           });
         } else if (value.mode === 'create') {
           this.weatherService.addCurrentConditions(value.currentZip);
@@ -50,7 +44,10 @@ export class CurrentConditionsComponent {
     this.addErrorSubscription$ = this.weatherService.addErrorSubject.subscribe(
       () => {
         this.locationService.locations.pop();
-        localStorage.setItem('locations', JSON.stringify(this.locationService.locations));
+        localStorage.setItem(
+          'locations',
+          JSON.stringify(this.locationService.locations)
+        );
       }
     );
   }

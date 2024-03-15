@@ -17,3 +17,7 @@
 a {
   cursor: pointer;
 }
+
+.container-tab-weather {
+  margin-bottom: 20px;
+}

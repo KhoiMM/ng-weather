@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 
 import { HttpClient } from '@angular/common/http';
-import { take } from 'rxjs/operators';
-import { CACHED_TIME } from './cached-time';
+import { take, tap } from 'rxjs/operators';
 import { ConditionsAndZip } from './conditions-and-zip.type';
+import { CookieUtil } from './cookie-util';
 import { CurrentConditions } from './current-conditions/current-conditions.type';
 import { Forecast } from './forecasts-list/forecast.type';
 
@@ -15,79 +15,81 @@ export class WeatherService {
   static ICON_URL =
     'https://raw.githubusercontent.com/udacity/Sunshine-Version-2/sunshine_master/app/src/main/res/drawable-hdpi/';
   currentConditions: ConditionsAndZip[] = [];
+  expTime: number;
   public addErrorSubject = new Subject();
 
   constructor(private http: HttpClient) {}
 
-  initCurrentConditions(zipcode: string, cachedConditions: ConditionsAndZip[]) {
-    const condition = cachedConditions.find((c) => c.zip === zipcode);
-    if (
-      condition &&
-      condition.calledTime + CACHED_TIME >= new Date().getTime()
-    ) {
-      this.currentConditions.push(condition);
+  checkExpTime() {
+    const expTimeStr = localStorage.getItem('exp_time');
+    // if exp_time was removed from local storage, it would automatically set to 7200 seconds (2 hours)
+    this.expTime =
+      expTimeStr && !isNaN(Number(expTimeStr)) ? Number(expTimeStr) : 7200;
+    localStorage.setItem('exp_time', this.expTime.toString());
+  }
+
+  addCurrentConditions(zipcode: string) {
+    this.checkExpTime();
+    const cookiedConditionStr = CookieUtil.getCookie(
+      'condition' + '_' + zipcode
+    );
+    if (cookiedConditionStr) {
+      const cachedCondition = JSON.parse(
+        cookiedConditionStr
+      ) as CurrentConditions;
+      this.currentConditions.push({ zip: zipcode, data: cachedCondition });
     } else {
       this.http
         .get<CurrentConditions>(
           `${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`
         )
         .pipe(take(1))
-        .subscribe((res) => {
-          this.currentConditions.push({
-            zip: zipcode,
-            data: res,
-            calledTime: new Date().getTime(),
-          });
-          localStorage.setItem(
-            'conditionsByZip',
-            JSON.stringify(this.currentConditions)
-          );
-        });
+        .subscribe(
+          (res) => {
+            this.currentConditions.push({
+              zip: zipcode,
+              data: res,
+            });
+            CookieUtil.setCookie(
+              'condition' + '_' + zipcode,
+              JSON.stringify(res),
+              this.expTime
+            );
+          },
+          () => {
+            this.addErrorSubject.next();
+          }
+        );
     }
-  }
-
-  addCurrentConditions(zipcode: string) {
-    // Here we make a request to get the current conditions data from the API. Note the use of backticks and an expression to insert the zipcode
-    this.http
-      .get<CurrentConditions>(
-        `${WeatherService.URL}/weather?zip=${zipcode},us&units=imperial&APPID=${WeatherService.APPID}`
-      )
-      .pipe(take(1))
-      .subscribe(
-        (condition) => {
-          this.currentConditions.push({
-            zip: zipcode,
-            data: condition,
-            calledTime: new Date().getTime(),
-          });
-          localStorage.setItem(
-            'conditionsByZip',
-            JSON.stringify(this.currentConditions)
-          );
-        }
-        ,
-        () => {
-          this.addErrorSubject.next();
-        }
-      );
   }
 
   removeCurrentConditions(index: number) {
     if (index !== -1) {
       this.currentConditions.splice(index, 1);
-      const cachedConditions = JSON.parse(
-        localStorage.getItem('conditionsByZip')
-      ) as ConditionsAndZip[];
-      cachedConditions.splice(index, 1);
-      localStorage.setItem('conditionsByZip', JSON.stringify(cachedConditions));
     }
   }
 
   getForecast(zipcode: string): Observable<Forecast> {
+    this.checkExpTime();
     // Here we make a request to get the forecast data from the API. Note the use of backticks and an expression to insert the zipcode
-    return this.http.get<Forecast>(
-      `${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`
-    );
+    const cookiedForecastStr = CookieUtil.getCookie('forecast' + '_' + zipcode);
+    if (cookiedForecastStr) {
+      return of(JSON.parse(cookiedForecastStr) as Forecast);
+    } else {
+      return this.http
+        .get<Forecast>(
+          `${WeatherService.URL}/forecast/daily?zip=${zipcode},us&units=imperial&cnt=5&APPID=${WeatherService.APPID}`
+        )
+        .pipe(
+          tap((res) =>
+            CookieUtil.setCookie(
+              'forecast' + '_' + zipcode,
+              JSON.stringify(res),
+              this.expTime
+            )
+          )
+        );
+    }
   }
 
   getWeatherIcon(id): string {

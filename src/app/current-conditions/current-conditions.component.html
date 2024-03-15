@@ -1,32 +1,38 @@
-<div>
-  <ng-container *ngIf="currentConditionsByZip.length">
-    <app-tab-group (removeTabEvent)="removeTab($event)">
-      <ng-container
-        *ngFor="let location of currentConditionsByZip"
-        class="well flex"
-      >
-        <app-tab label="{{ location.data.name }} ({{ location.zip }})">
-          <div class="card-weather" (click)="showForecast(location.zip)">
-            <div>
-              <h4>Current conditions: {{ location.data.weather[0].main }}</h4>
-              <h4>Temperatures today:</h4>
-              <p>
-                Current {{ location.data.main.temp | number : '.0-0' }} - Max
-                {{ location.data.main.temp_max | number : '.0-0' }} - Min
-                {{ location.data.main.temp_min | number : '.0-0' }}
-              </p>
-              <p>
-                <a (click)="showForecast(location.zip)"
-                  >Show 5-day forecast for {{ location.data.name }}</a
-                >
-              </p>
-            </div>
-            <img
-              [src]="weatherService.getWeatherIcon(location.data.weather[0].id)"
-            />
+<div class="container-tab-weather" *ngIf="currentConditionsByZip.length">
+  <app-tab-group (removeTabEvent)="removeTab($event)">
+    <ng-container
+      *ngFor="let location of currentConditionsByZip"
+      class="well flex"
+    >
+      <app-tab label="{{ location.data.name }} ({{ location.zip }})">
+        <div class="card-weather" (click)="showForecast(location.zip)">
+          <div>
+            <h4>Current conditions: {{ location.data.weather[0].main }}</h4>
+            <h4>Temperatures today:</h4>
+            <p>
+              Current {{ location.data.main.temp | number : '.0-0' }} - Max
+              {{ location.data.main.temp_max | number : '.0-0' }} - Min
+              {{ location.data.main.temp_min | number : '.0-0' }}
+            </p>
+            <p>
+              <a (click)="showForecast(location.zip)"
+                >Show 5-day forecast for {{ location.data.name }}</a
+              >
+            </p>
           </div>
-        </app-tab>
-      </ng-container>
-    </app-tab-group>
-  </ng-container>
+          <img
+            [src]="weatherService.getWeatherIcon(location.data.weather[0].id)"
+          />
+        </div>
+      </app-tab>
+    </ng-container>
+  </app-tab-group>
 </div>
+
+<p>
+  You can edit the expired time (second) in local storage (key is exp_time).
+</p>
+<p>
+  If exp_time is removed from local storage, it will automatically add again and set to 7200
+  seconds (2 hours).
+</p>
